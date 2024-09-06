@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>
+      {% block title %}
+      Shop index
+      {% endblock %}
+    </title>
+</head>
+<body>
+{% block body %}
+Base body
+{% endblock %}
+
+<div>
+  {% now 'l' as current_weekday%}
+  Today is {{ current_weekday }}
+  {% if 'Friday' in current_weekday %}
+  <b>The weekend starts tomorrow</b>
+  {% endif %}
+</div>
+<div>
+  Current time:
+  {% now 'H:i' %}
+  {% now 'H' as hour %}
+  {% if hour > '14' %}
+  <b>It's time to sleep</b>
+  {% endif %}
+</div>
+</body>
+</html>
