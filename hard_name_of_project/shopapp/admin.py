@@ -29,10 +29,12 @@ class ProductAdmin(admin.ModelAdmin, ExportAsCSCMixin):
     inlines = [
         OrderInline,
     ]
+
     list_display = 'pk', 'name', 'description_short', 'price', 'discount', 'archive'
     list_display_links = 'pk', 'name'
     ordering = '-name',
     search_fields = 'name', 'description', 'price'
+
     fieldsets = [
         (None, {
             'fields': ('name', 'description'),
@@ -48,11 +50,12 @@ class ProductAdmin(admin.ModelAdmin, ExportAsCSCMixin):
         }),
     ]
 
-    @staticmethod
-    def description_short(obj: Product) -> str:
+    def description_short(self, obj: Product) -> str:
         if len(obj.description) < 48:
             return obj.description
         return obj.description[:48] + '...'
+
+    description_short.short_description = 'My Descript'
 
 
 class ProductInline(admin.StackedInline):
