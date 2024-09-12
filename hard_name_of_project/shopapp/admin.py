@@ -7,6 +7,7 @@ from .admin_mixins import ExportAsCSCMixin
 
 class OrderInline(admin.TabularInline):
     model = Product.orders.through
+    extra = 0
 
 
 @admin.action(description='Archive Products')
@@ -56,6 +57,7 @@ class ProductAdmin(admin.ModelAdmin, ExportAsCSCMixin):
 
 class ProductInline(admin.StackedInline):
     model = Order.products.through
+    extra = 0
 
 
 @admin.register(Order)
