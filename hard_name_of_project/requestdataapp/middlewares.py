@@ -1,5 +1,7 @@
 from django.http import HttpRequest, HttpResponse
-import time
+from django.conf import settings
+from datetime import datetime, timedelta
+from http import HTTPStatus
 
 def set_useragent_on_request_middleware(get_response):
     def middleware(request: HttpRequest):
@@ -16,32 +18,8 @@ class CountRequestsMiddleware:
         self.request_count = 0
         self.response_count = 0
         self.exceptions_count = 0
-        self.ip_requests = {}
-        self.start = 0
 
     def __call__(self, request: HttpRequest):
-        ip = request.META['REMOTE_ADDR']
-
-        '''Реализация 2 задачи: Если нет ip адреса в словаре, то добавляется ip в словарь и далее
-        прибавляется значение к нему при каждом вызове страницы(но не более 10) + сохраняется время первого
-        вызова страницы
-        Если разница более 60 секунд, очищается словарь и время первого вызова( страница снова доступна!) ) 
-        '''
-
-        if ip not in self.ip_requests:
-            self.ip_requests[ip] = 1
-            self.start = time.time()
-
-        else:
-            self.ip_requests[ip] += 1
-
-            if (self.ip_requests[ip] > 10) and (time.time() - self.start < 60):
-                return HttpResponse(f'<h1>Sorry, this page is not available now</h1>\n'
-                                    f'Too many request')
-            elif time.time() - self.start > 60:
-                self.ip_requests.clear()
-                self.start = 0
-
 
         self.request_count += 1
         print('Count request: ', self.response_count)
@@ -55,3 +33,38 @@ class CountRequestsMiddleware:
     def process_exception(self, request: HttpRequest, exception: Exception):
         self.exceptions_count += 1
         print('Exception count', self.exceptions_count)
+
+
+class ThrottlingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.bucket: dict[str, datetime] = {}
+        self.rate_ms = settings.THROTTLING_RATE_MS
+
+    @classmethod
+    def get_client_ip(cls, request: HttpRequest):
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(",")[0]
+        else:
+            ip = request.META.get("REMOTE_ADDR")
+        return ip
+
+    def request_is_allowed(self, client_ip: str) -> bool:
+        now = datetime.now()
+        last_access = self.bucket.get(client_ip)
+        if not last_access:
+            return True
+        if (now - last_access) > timedelta(milliseconds=self.rate_ms):
+            return True
+
+        return False
+
+    def __call__(self, request: HttpRequest):
+        client_ip = self.get_client_ip(request)
+        if self.request_is_allowed(client_ip):
+            response = self.get_response(request)
+            self.bucket[client_ip] = datetime.now()
+        else:
+            response = HttpResponse("Rate limit exceeded", status=HTTPStatus.TOO_MANY_REQUESTS)
+        return response
