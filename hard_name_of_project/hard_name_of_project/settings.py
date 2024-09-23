@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+THROTTLING_RATE_MS = 1500
 
 # Application definition
 
@@ -51,6 +52,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'requestdataapp.middlewares.set_useragent_on_request_middleware',
     'requestdataapp.middlewares.CountRequestsMiddleware',
+    'requestdataapp.middlewares.ThrottlingMiddleware',
 ]
 
 ROOT_URLCONF = 'hard_name_of_project.urls'
