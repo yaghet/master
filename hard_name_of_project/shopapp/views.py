@@ -1,67 +1,135 @@
 from django.shortcuts import render, redirect, reverse
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.contrib.auth.models import Group
 from .models import Product, Order
-from .forms import ProductForm, OrderForm
-
-def shop_view(request: HttpRequest):
-    products = [
-        ('desktop', 1999),
-        ('laptop', 1999),
-        ('smartphone', 999),
-    ]
-    context_shop = {
-        'products': products,
-    }
-    return render(request, 'shopapp/shop-app.html', context=context_shop)
+from .forms import GroupForm
+from django.views import View
+from django.urls import reverse_lazy
+from django.views.generic import (
+    ListView,
+    DetailView,
+    CreateView,
+    UpdateView,
+    DeleteView,
+)
 
 
-def group_list(request: HttpRequest):
-    context_group = {
-        'groups': Group.objects.prefetch_related('permissions').all(),
-    }
-    return render(request, 'shopapp/groups-list.html', context=context_group)
+# View для отображения продуктов
+class ShopAppView(View):
+    def get(self, request: HttpRequest) -> HttpResponse:
+        products = [
+            ('desktop', 1999),
+            ('laptop', 1999),
+            ('smartphone', 999),
+        ]
+        context_shop = {
+            'products': products,
+        }
+        return render(request, 'shopapp/shop-app.html', context=context_shop)
 
 
-def products_list(request: HttpRequest):
-    context_product = {
-        'products': Product.objects.all(),
-    }
-    return render(request, 'shopapp/products-list.html', context=context_product)
+# View для отображения списка групп
+class GroupListView(View):
+    def get(self, request: HttpRequest):
+        context_group = {
+            'form': GroupForm(),
+            'groups': Group.objects.prefetch_related('permissions').all(),
+        }
+        return render(request, 'shopapp/groups-list.html', context=context_group)
 
-def create_product(request: HttpRequest) -> HttpResponse:
-    if request.method == 'POST':
-        form = ProductForm(request.POST)
+    def post(self, request: HttpRequest) -> HttpResponse:
+        form = GroupForm(request.POST)
         if form.is_valid():
             form.save()
-            url = reverse('shopapp:products_list')
-            return redirect(url)
-    else:
-        form = ProductForm()
-    context_create_product = {
-        'form': form,
-    }
-    return render(request, 'shopapp/create-product.html', context=context_create_product)
+        return redirect(request.path)
 
 
-def orders_list(request: HttpRequest):
-    context_orders ={
-        'orders': Order.objects.select_related('user').prefetch_related('products').all(),
-    }
-    return render(request, 'shopapp/orders-list.html', context=context_orders)
+# View для отображения списка продуктов
+class ProductsListView(ListView):
+    template_name = 'shopapp/products-list.html'
+    # model = Product
+    context_object_name = 'products'
+    queryset = Product.objects.filter(archive=False)
 
 
-def create_order(request: HttpRequest) -> HttpResponse:
-    if request.method == 'POST':
-        form = OrderForm(request.POST)
-        if form.is_valid():
-            form.save()
-            url = reverse('shopapp:orders_list')
-            return redirect(url)
-    else:
-        form = OrderForm()
+# View для отображения деталей выбранного продукта
+class ProductsDetailsView(DetailView):
+    template_name = 'shopapp/product-details.html'
+    model = Product
+    context_object_name = 'product'
 
-    context_create_order = {
-        'form': form,
-    }
-    return render(request, 'shopapp/create-order.html', context=context_create_order)
+
+# View для создания продукта
+class CreateProductView(CreateView):
+    model = Product
+    fields = 'name', 'price', 'description', 'discount'
+    success_url = reverse_lazy('shopapp:products_list')
+
+
+# View для обновления продукта
+class ProductUpdateView(UpdateView):
+    model = Product
+    fields = 'name', 'price', 'description', 'discount'
+    template_name_suffix = '_update_form'
+
+    def get_success_url(self):
+        return reverse(
+            'shopapp:products_details',
+            kwargs={'pk': self.object.pk},
+        )
+
+
+# View для выполнения архивации выбранной сущности
+class ProductDeleteView(DeleteView):
+    model = Product
+    success_url = reverse_lazy('shopapp:products_list')
+
+    def form_valid(self, form):
+        success_url = self.get_success_url()
+        self.object.archived = True
+        self.object.save()
+        return HttpResponseRedirect(success_url)
+
+
+# View для отображения списка заказов
+class OrdersListView(ListView):
+    queryset = (
+        Order.objects
+        .select_related('user')
+        .prefetch_related('products')
+    )
+
+
+# View для отображения деталей выбранного заказа
+class OrdersDetailView(DetailView):
+    queryset = (
+        Order.objects
+        .select_related('user')
+        .prefetch_related('products')
+    )
+
+
+# View для создания заказа
+class CreateOrderView(CreateView):
+    model = Order
+    fields = "user", "products", "delivery_address", "promocode"
+    success_url = reverse_lazy('shopapp:orders_list')
+
+
+# View для обновления заказа
+class OrderUpdateView(UpdateView):
+    model = Order
+    fields = 'user', 'products', 'promocode', 'delivery_address'
+    template_name_suffix = '_update_form'
+
+    def get_success_url(self):
+        return reverse(
+            'shopapp:orders_details',
+            kwargs={'pk': self.object.pk}
+        )
+
+
+# View для полного удаления выбранной сущности
+class OrderDeleteView(DeleteView):
+    model = Order
+    success_url = reverse_lazy('shopapp:orders_list')

@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Product(models.Model):
+    objects = None
+
     class Meta:
         ordering = ['name', 'price']
 
@@ -18,6 +20,7 @@ class Product(models.Model):
 
 
 class Order(models.Model):
+    objects = None
     delivery_address = models.TextField(null=True, blank=True)
     promocode = models.CharField(max_length=20, null=False, blank=True)
     create_at = models.DateTimeField(auto_now_add=True)
