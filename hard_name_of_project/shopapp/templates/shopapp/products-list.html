@@ -13,6 +13,7 @@
             <p><a href="{% url 'shopapp:products_details' pk=product.pk %}">Name: {{ product.name }}</a></p>
             <p>Price: {{ product.price }}</p>
             <p>Discount: {% firstof product.discount 'no discount' %}</p>
+            <p>Created by: {{ product.created_by }}</p>
         </div>
         {% endfor %}
     </div>
@@ -20,8 +21,10 @@
     No products
 {% endif %}
 <div>
-    <a href="{% url 'shopapp:create_product' %}">
+    {% if perms.user %}
+    <a href="{% url 'shopapp:products_create' %}">
         >Create a new product<
     </a>
+    {% endif %}
 </div>
 {% endblock %}

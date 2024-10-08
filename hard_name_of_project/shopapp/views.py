@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, reverse
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import Group
 from .models import Product, Order
 from .forms import GroupForm
@@ -60,14 +61,32 @@ class ProductsDetailsView(DetailView):
 
 
 # View для создания продукта
-class CreateProductView(CreateView):
+class CreateProductView(PermissionRequiredMixin, CreateView):
+
+    permission_required = 'shopapp.add_product'
+
     model = Product
     fields = 'name', 'price', 'description', 'discount'
     success_url = reverse_lazy('shopapp:products_list')
 
+    def form_valid(self, form):
+         form.instance.created_by = self.request.user
+         response = super().form_valid(form)
+         return response
+
+
 
 # View для обновления продукта
-class ProductUpdateView(UpdateView):
+class ProductUpdateView(UserPassesTestMixin, UpdateView):
+
+    def test_func(self):
+        if self.request.user.is_superuser:
+            return True
+        if self.request.user.has_perm("shopapp.change_product") and self.get_object().created_by == self.request.user:
+            return True
+        else:
+            return False
+
     model = Product
     fields = 'name', 'price', 'description', 'discount'
     template_name_suffix = '_update_form'
@@ -92,7 +111,7 @@ class ProductDeleteView(DeleteView):
 
 
 # View для отображения списка заказов
-class OrdersListView(ListView):
+class OrdersListView(LoginRequiredMixin, ListView):
     queryset = (
         Order.objects
         .select_related('user')
@@ -101,7 +120,8 @@ class OrdersListView(ListView):
 
 
 # View для отображения деталей выбранного заказа
-class OrdersDetailView(DetailView):
+class OrdersDetailView(PermissionRequiredMixin, DetailView):
+    permission_required = 'view_order'
     queryset = (
         Order.objects
         .select_related('user')
