@@ -82,10 +82,13 @@ class ProductUpdateView(UserPassesTestMixin, UpdateView):
     def test_func(self):
         if self.request.user.is_superuser:
             return True
-        if self.request.user.has_perm("shopapp.change_product") and self.get_object().created_by == self.request.user:
-            return True
-        else:
-            return False
+
+        self.object = self.get_object()
+
+        has_edit_perm = self.request.user.has_perm("shopapp.change_product")
+        created_by_current_user = self.object.created_by == self.request.user
+
+        return has_edit_perm and created_by_current_user
 
     model = Product
     fields = 'name', 'price', 'description', 'discount'
