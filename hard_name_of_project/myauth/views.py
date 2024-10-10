@@ -1,6 +1,6 @@
 from django.shortcuts import redirect
 from django.contrib.auth import logout, login, authenticate
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views import View
 from django.views.generic import TemplateView, CreateView
 from django.contrib.auth.forms import UserCreationForm
@@ -65,3 +65,8 @@ def set_session_view(request) -> HttpResponse:
 def get_session_view(request) -> HttpResponse:
      value = request.session.get('foobar', 'default')
      return HttpResponse(f'Session value {value!r}')
+
+
+class FooBarView(View):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        return JsonResponse({"one": "True", "zero": "False"})
