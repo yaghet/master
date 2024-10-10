@@ -1,6 +1,7 @@
+from itertools import product
 from timeit import default_timer
 
-from django.http import HttpResponse, HttpRequest, HttpResponseRedirect
+from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, reverse
 from django.urls import reverse_lazy
 from django.views import View
@@ -81,3 +82,35 @@ class OrderDetailView(PermissionRequiredMixin, DetailView):
         .select_related("user")
         .prefetch_related("products")
     )
+
+
+class ProductExportView(View):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        products = Product.objects.order_by('pk').all()
+        products_data = [
+            {
+                "pk": product.pk,
+                "name": product.name,
+                "price": product.price,
+                "archived": product.archived,
+            }
+            for product in products
+        ]
+        return JsonResponse({'products': products_data})
+
+
+class OrderExportView(View):
+    def get(self, request: HttpRequest) -> JsonResponse:
+        orders = Order.objects.order_by('pk').all()
+        orders_data = [
+            {
+                "pk": order.pk,
+                "delivery_address": order.delivery_address,
+                "promocode": order.promocode,
+                "user": order.user.pk,
+                "products": [product.pk for product in order.products.all()],
+            }
+            for order in orders
+        ]
+
+        return JsonResponse(orders_data)
