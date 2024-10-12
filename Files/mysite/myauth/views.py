@@ -3,7 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LogoutView
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse
 from django.views import View
 from django.views.generic import TemplateView, CreateView, UpdateView, ListView, DetailView
@@ -62,8 +63,10 @@ class RegisterView(CreateView):
         return response
 
 
-class MyLogoutView(LogoutView):
-    next_page = reverse_lazy("myauth:login")
+class MyLogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('myauth:login')
 
 
 @user_passes_test(lambda u: u.is_superuser)
