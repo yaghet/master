@@ -1,17 +1,40 @@
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LogoutView
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.contrib.auth import authenticate, login
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views import View
-from django.views.generic import TemplateView, CreateView
+from django.views.generic import TemplateView, CreateView, UpdateView, ListView, DetailView
 
 from .models import Profile
+from .forms import ProfileEditForm
 
 
 class AboutMeView(TemplateView):
     template_name = "myauth/about-me.html"
+
+
+class AvatarUpdateView(UpdateView):
+    template_name = "myauth/avatar-update.html"
+    model = Profile
+    form_class = ProfileEditForm
+
+    def get_success_url(self):
+        return reverse('myauth:about-me')
+
+
+class UsersListView(ListView):
+    template_name = "myauth/user-list.html"
+    context_object_name = 'users_list'
+    queryset = User.objects.all()
+
+
+class DetailListView(DetailView):
+    template_name = "myauth/user-detail.html"
+    context_object_name = 'user'
+    queryset = User.objects.all().select_related('profile')
 
 
 class RegisterView(CreateView):
