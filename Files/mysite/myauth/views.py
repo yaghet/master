@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login
 from django.urls import reverse_lazy, reverse
 from django.views import View
 from django.views.generic import TemplateView, CreateView, UpdateView, ListView, DetailView
-
+from django.contrib.auth.mixins import UserPassesTestMixin
 from .models import Profile
 from .forms import ProfileEditForm
 
@@ -16,7 +16,13 @@ class AboutMeView(TemplateView):
     template_name = "myauth/about-me.html"
 
 
-class AvatarUpdateView(UpdateView):
+class AvatarUpdateView(UserPassesTestMixin, UpdateView):
+
+    def test_func(self):
+        if self.request.user.is_superuser or self.request.user.pk == self.get_object().user_id:
+            return True
+        return False
+
     template_name = "myauth/avatar-update.html"
     model = Profile
     form_class = ProfileEditForm
