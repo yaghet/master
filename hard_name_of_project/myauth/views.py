@@ -1,11 +1,32 @@
-from django.shortcuts import redirect
+from django.shortcuts import redirect, reverse
 from django.contrib.auth import logout, login, authenticate
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views import View
-from django.views.generic import TemplateView, CreateView
+from django.views.generic import TemplateView, CreateView, UpdateView
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.urls import reverse_lazy
 from .models import Profile
+from .forms import ProfileUpdate
+
+
+
+#View для обновления аватара пользователя
+class UpdateAvatarView(UserPassesTestMixin, UpdateView):
+    def test_func(self):
+        if self.request.user.is_superuser or self.request.user.pk == self.get_object().user_id:
+            return True
+        return False
+
+    model = Profile
+    template_name = 'myauth/update_avatar.html'
+    form_class = ProfileUpdate
+
+
+    def get_success_url(self):
+        return reverse(
+            "myauth:about-me"
+        )
 
 
 # View для регистрации нового пользователя

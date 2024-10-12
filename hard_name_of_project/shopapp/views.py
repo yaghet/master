@@ -6,8 +6,8 @@ from django.contrib.auth.mixins import (
     UserPassesTestMixin,
 )
 from django.contrib.auth.models import Group
-from .models import Product, Order
-from .forms import GroupForm
+from .models import Product, Order, ProductImage
+from .forms import GroupForm, ProductForm
 from django.views import View
 from django.urls import reverse_lazy
 from django.views.generic import (
@@ -15,7 +15,7 @@ from django.views.generic import (
     DetailView,
     CreateView,
     UpdateView,
-    DeleteView,
+    DeleteView, FormView,
 )
 
 
@@ -60,8 +60,9 @@ class ProductsListView(ListView):
 # View для отображения деталей выбранного продукта
 class ProductsDetailsView(DetailView):
     template_name = "shopapp/product-details.html"
-    model = Product
+    # model = Product
     context_object_name = "product"
+    queryset = Product.objects.prefetch_related("images")
 
 
 # View для создания продукта
@@ -70,7 +71,7 @@ class CreateProductView(PermissionRequiredMixin, CreateView):
     permission_required = "shopapp.add_product"
 
     model = Product
-    fields = "name", "price", "description", "discount"
+    fields = "name", "price", "description", "discount", 'preview'
     success_url = reverse_lazy("shopapp:products_list")
 
     def form_valid(self, form):
@@ -80,7 +81,7 @@ class CreateProductView(PermissionRequiredMixin, CreateView):
 
 
 # View для обновления продукта
-class ProductUpdateView(UserPassesTestMixin, UpdateView):
+class ProductUpdateView(UserPassesTestMixin, UpdateView, FormView):
 
     def test_func(self):
         if self.request.user.is_superuser:
@@ -94,15 +95,26 @@ class ProductUpdateView(UserPassesTestMixin, UpdateView):
         return has_edit_perm and created_by_current_user
 
     model = Product
-    fields = "name", "price", "description", "discount"
     template_name_suffix = "_update_form"
+    form_class = ProductForm
 
     def get_success_url(self):
         return reverse(
             "shopapp:products_details",
             kwargs={"pk": self.object.pk},
         )
+    
+    def form_valid(self, form):
 
+        response = super().form_valid(form)
+        files = self.request.FILES.getlist("images")
+
+        for image in files:
+             ProductImage.objects.create(
+                 product=self.object,
+                 image=image,
+             )
+        return response
 
 # View для выполнения архивации выбранной сущности
 class ProductDeleteView(DeleteView):

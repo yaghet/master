@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, Order
+from .models import Product, Order, ProductImage
 from django.http import HttpRequest
 from django.db.models import QuerySet
 from .admin_mixins import ExportAsCSCMixin
@@ -8,6 +8,9 @@ from .admin_mixins import ExportAsCSCMixin
 class OrderInline(admin.TabularInline):
     model = Product.orders.through
     extra = 0
+
+class ProductInlineImage(admin.StackedInline):
+    model = ProductImage
 
 
 @admin.action(description='Archive Products')
@@ -28,6 +31,7 @@ class ProductAdmin(admin.ModelAdmin, ExportAsCSCMixin):
     ]
     inlines = [
         OrderInline,
+        ProductInlineImage,
     ]
 
     list_display = 'pk', 'name', 'description_short', 'price', 'discount', 'archive'
@@ -47,6 +51,9 @@ class ProductAdmin(admin.ModelAdmin, ExportAsCSCMixin):
             'fields': ('archive',),
             'classes': ('collapse',),
             'description': 'Extra options. Field "archive" is for soft delete',
+        }),
+        ('images', {
+            'fields': ('preview',),
         }),
     ]
 

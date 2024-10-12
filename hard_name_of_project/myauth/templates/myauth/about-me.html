@@ -1,19 +1,31 @@
 {% extends 'myauth/base.html' %}
 
 {% block title %}
-  About me
+    About me
 {% endblock %}
 
 {% block body %}
-  <h1>User info</h1>
-  {% if user.is_authenticated %}
-    <h2>Detail</h2>
-    <p>User name: {{ user.username }}</p>
-    <p>First name: {{ user.first_name }}</p>
-    <p>Last name: {{ user.last_name }}</p>
-    <p>Email: {{ user.email }}</p>
-    <p>Bio: {{ user.profile.bio }}</p>
-  {% else %}
-    <h2>User is anonymous</h2>
-  {% endif %}
+    <h1>User info</h1>
+    {% if user.is_authenticated %}
+        <h2>Detail</h2>
+
+        {% if user.profile.avatar %}
+            <img width="250" height="250" src="{{ user.profile.avatar.url }}" alt=" {{ user.profile.avatar.name }}">
+        {% else %}
+            Avatar not yet
+        {% endif %}
+
+        {% if request.user.is_staff %}
+            <a href="{% url 'myauth:avatar-update' pk=user.pk %}">
+                <h3>Update avatar: {{ user.username }}</h3>
+            </a>
+        {% endif %}
+        <p>User name: {{ user.username }}</p>
+        <p>First name: {{ user.first_name }}</p>
+        <p>Last name: {{ user.last_name }}</p>
+        <p>Email: {{ user.email }}</p>
+        <p>Bio: {{ user.profile.url }}</p>
+    {% else %}
+        <h2>User is anonymous</h2>
+    {% endif %}
 {% endblock %}

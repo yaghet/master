@@ -44,7 +44,7 @@ class OrderExportViewTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(OrderExportViewTestCase, cls).setUpClass()
+        super().setUpClass()
         cls.user = User.objects.create_user(username='Skillbox', password='default')
 
     @classmethod
