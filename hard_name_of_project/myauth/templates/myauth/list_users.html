@@ -4,13 +4,20 @@
 {% endblock %}
 {% block body %}
     {% for user in users %}
-        <p>{{ user.username }}</p>
         {% if user.profile.avatar %}
             <img width="150" src="{{ user.profile.avatar.url }}" alt="">
         {% else %}
             <div>
-                <p>Аватар</p>
+                <p>(Аватар ещё не загружен)</p>
             </div>
         {% endif %}
+        <p>
+            <b>User name:</b> <span>{{ user.username.title }}</span>
+        </p>
+        <p>
+            <b>User bio:</b>
+            {{ user.profile.bio }}
+        </p>
+        <p>_______________________________</p>
     {% endfor %}
 {% endblock %}
