@@ -11,6 +11,7 @@ from .views import (
     FooBarView,
     UpdateAvatarView,
     ListUsersView,
+    UserDetailView,
 )
 
 app_name = 'myauth'
@@ -29,6 +30,7 @@ urlpatterns = [
     path('avatar-update/<int:pk>/', UpdateAvatarView.as_view(), name='avatar-update'),
 
     path('list-users/', ListUsersView.as_view(), name='list-users'),
+    path('user-detail/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
 
     path('cookie/get/', get_cookie_view, name='cookie-get'),
     path('cookie/set/', set_cookie_view, name='cookie-set'),

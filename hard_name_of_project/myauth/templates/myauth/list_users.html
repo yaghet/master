@@ -12,7 +12,7 @@
             </div>
         {% endif %}
         <p>
-            <b>User name:</b> <span>{{ user.username.title }}</span>
+            <b>User name:</b> <a href="{% url 'myauth:user-detail' pk=user.pk %}">{{ user.username.title }}</a>
         </p>
         <p>
             <b>User bio:</b>
@@ -20,4 +20,7 @@
         </p>
         <p>_______________________________</p>
     {% endfor %}
+    <footer>
+        <a href="{% url 'myauth:about-me' %}">Мой профиль</a>
+    </footer>
 {% endblock %}

@@ -2,7 +2,7 @@ from django.shortcuts import redirect, reverse
 from django.contrib.auth import logout, login, authenticate
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views import View
-from django.views.generic import TemplateView, CreateView, UpdateView, ListView
+from django.views.generic import TemplateView, CreateView, UpdateView, ListView, DetailView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.urls import reverse_lazy
@@ -13,20 +13,30 @@ from .forms import ProfileUpdate
 
 #View для обновления аватара пользователя
 class UpdateAvatarView(UserPassesTestMixin, UpdateView):
+    template_name = "myauth/update_avatar.html"
+    model = Profile
+    fields = "avatar", "bio"
+
     def test_func(self):
-        if self.request.user.is_superuser or self.request.user.pk == self.get_object().user_id:
+        print(self.request.user)
+        print(self.request.user.is_staff)
+        if self.request.user.is_staff:
+            return True
+        self.object = self.get_object()
+        if self.request.user.pk == self.object.user.pk:
             return True
         return False
 
-    model = Profile
-    template_name = 'myauth/update_avatar.html'
-    form_class = ProfileUpdate
-
+    def get_object(self, queryset=None):
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        user = User.objects.select_related("profile").get(pk=pk)
+        try:
+            return user.profile
+        except Profile.DoesNotExist:
+            return Profile.objects.create(user=user)
 
     def get_success_url(self):
-        return reverse(
-            "myauth:list-users"
-        )
+        return reverse('myauth:list-users')
 
 
 # View для регистрации нового пользователя
@@ -52,7 +62,7 @@ class RegisterView(CreateView):
         return response
 
 
-# View для просмотра информации о пользователе
+# View для просмотра информации о себе
 class AboutMyView(TemplateView):
     template_name = 'myauth/about-me.html'
 
@@ -62,6 +72,13 @@ class ListUsersView(ListView):
     template_name = 'myauth/list_users.html'
     context_object_name = 'users'
     queryset = User.objects.all()
+
+# View для просмотра информации о пользователе
+class UserDetailView(DetailView):
+    template_name = 'myauth/user_detail.html'
+    queryset = User.objects.select_related("profile")
+    context_object_name = 'user'
+
 
 # View для перенаправления пользователя после Logout
 class MyLogoutPage(View):

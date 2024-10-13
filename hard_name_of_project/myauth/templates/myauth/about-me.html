@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block body %}
-    <h1>User info</h1>
+    <h1>Мой профиль</h1>
     {% if user.is_authenticated %}
         <h2>Detail</h2>
 
@@ -15,16 +15,17 @@
             Avatar not yet
         {% endif %}
 
-        {% if request.user.is_staff or request.user.pk == user.pk %}
-            <a href="{% url 'myauth:avatar-update' pk=user.pk %}">
-                <h3>Update avatar: {{ user.username }}</h3>
-            </a>
-        {% endif %}
+
         <p>User name: {{ user.username }}</p>
         <p>First name: {{ user.first_name }}</p>
         <p>Last name: {{ user.last_name }}</p>
         <p>Email: {{ user.email }}</p>
         <p>Bio: {{ user.profile.url }}</p>
+        {% if request.user.is_staff or request.user.pk == user.pk %}
+            <a href="{% url 'myauth:avatar-update' pk=user.pk %}">
+                <h3>Редактировать профиль</h3>
+            </a>
+        {% endif %}
     {% else %}
         <h2>User is anonymous</h2>
     {% endif %}
