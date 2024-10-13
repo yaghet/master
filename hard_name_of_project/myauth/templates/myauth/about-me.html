@@ -15,7 +15,7 @@
             Avatar not yet
         {% endif %}
 
-        {% if request.user.is_staff %}
+        {% if request.user.is_staff or request.user.pk == user.pk %}
             <a href="{% url 'myauth:avatar-update' pk=user.pk %}">
                 <h3>Update avatar: {{ user.username }}</h3>
             </a>
@@ -28,4 +28,5 @@
     {% else %}
         <h2>User is anonymous</h2>
     {% endif %}
+    <a href="{% url 'myauth:list-users' %}">Список пользователей</a>
 {% endblock %}

@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-def profile_avatar_directory_path(instance: 'Profile', filename: str) -> str:
+def profile_avatar_directory_path(instance: 'User', filename: str) -> str:
 
      """
 

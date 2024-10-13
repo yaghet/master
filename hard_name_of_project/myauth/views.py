@@ -2,11 +2,11 @@ from django.shortcuts import redirect, reverse
 from django.contrib.auth import logout, login, authenticate
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views import View
-from django.views.generic import TemplateView, CreateView, UpdateView
+from django.views.generic import TemplateView, CreateView, UpdateView, ListView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.urls import reverse_lazy
-from .models import Profile
+from .models import Profile, User
 from .forms import ProfileUpdate
 
 
@@ -56,6 +56,12 @@ class RegisterView(CreateView):
 class AboutMyView(TemplateView):
     template_name = 'myauth/about-me.html'
 
+
+# View для просмотра списка пользователей
+class ListUsersView(ListView):
+    template_name = 'myauth/list_users.html'
+    context_object_name = 'users'
+    queryset = User.objects.all()
 
 # View для перенаправления пользователя после Logout
 class MyLogoutPage(View):
