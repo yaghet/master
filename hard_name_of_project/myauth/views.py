@@ -25,7 +25,7 @@ class UpdateAvatarView(UserPassesTestMixin, UpdateView):
 
     def get_success_url(self):
         return reverse(
-            "myauth:about-me"
+            "myauth:list-users"
         )
 
 
