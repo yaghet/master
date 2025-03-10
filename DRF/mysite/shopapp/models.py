@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -42,8 +44,17 @@ class Product(models.Model):
 
     name = models.CharField(max_length=100)
     description = models.TextField(null=False, blank=True)
-    price = models.DecimalField(default=0, max_digits=8, decimal_places=2, validators=[MinValueValidator(0)])
-    discount = models.SmallIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    price = models.DecimalField(
+        default=0,
+        max_digits=8,
+        decimal_places=2,
+        validators=[
+            MinValueValidator(
+                Decimal('0'),
+            )
+        ]
+    )
+    discount = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     create_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products', null=True)
     archive = models.BooleanField(default=False)
