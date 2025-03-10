@@ -1,11 +1,11 @@
 {% extends 'shopapp/base.html' %}
 
 {% block title %}
-  Groups List
+ Groups List
 {% endblock %}
 
 {% block body %}
-  <h1>Groups:</h1>
+ <h1>Group</h1>
   <div>
     <form method="post">
       {% csrf_token %}
@@ -14,27 +14,24 @@
     </form>
   </div>
   <div>
-  {% if not groups %}
-    <h3>No groups yet</h3>
-  {% else %}
+    {% if not groups %}
+    <h3>No groups</h3>
+    {% else %}
     <ul>
-
       {% for group in groups %}
-          <li>
-            <div>{{ group.name }}</div>
-            <ul>
-              {% for permission in group.permissions.all %}
-                <li>
-                  {{ permission.name }}
-                  (<code>{{ permission.codename }}</code>)
-                </li>
-              {% endfor %}
-
-            </ul>
-          </li>
+        <li>
+          <div> {{ group.name }} </div>
+          <ul>
+            {% for permission in group.permissions.all %}
+            <li>
+              {{ permission.name }}
+              (<code>{{ permission.codename }}</code>)
+            </li>
+            {% endfor %}
+          </ul>
+        </li>
       {% endfor %}
-
     </ul>
-  {% endif %}
+    {% endif %}
   </div>
 {% endblock %}

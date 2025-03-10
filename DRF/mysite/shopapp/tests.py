@@ -1,101 +1,51 @@
-from string import ascii_letters
-from random import choices
-
-from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.test import TestCase
 from django.urls import reverse
 
-from shopapp.models import Product
-from shopapp.utils import add_two_numbers
+from shopapp.models import Order
 
 
-class AddTwoNumbersTestCase(TestCase):
-    def test_add_two_numbers(self):
-        result = add_two_numbers(2, 3)
-        self.assertEqual(result, 5)
-
-
-class ProductCreateViewTestCase(TestCase):
-    def setUp(self) -> None:
-        self.product_name = "".join(choices(ascii_letters, k=10))
-        Product.objects.filter(name=self.product_name).delete()
-
-    def test_create_product(self):
-        response = self.client.post(
-            reverse('shopapp:product_create'),
-            {
-
-                "name": self.product_name,
-                "price": "123.45",
-                "description": "product description",
-                "discount": 10,
-            }
-        )
-        self.assertRedirects(response, reverse('shopapp:products_list'))
-        self.assertTrue(
-            Product.objects.filter(name=self.product_name).exists()
-        )
-
-
-class ProductDetailsTestCase(TestCase):
-
+class OrderDetailViewTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
-        # будет выполнено перед всеми тестами в классе
-        cls.product = Product.objects.create(name="Best Product")
+        cls.user = User.objects.create_user(username='Not_Admin', password='default')
+        cls.user.user_permissions.add(Permission.objects.get(codename='view_order'))
 
     @classmethod
     def tearDownClass(cls):
-        # будет выполнено после всех тестов в классе
-        cls.product.delete()
+        cls.user.delete()
 
-    # def setUp(self):
-    #     # будет выполнено перед каждым тестом
-    #     self.product = Product.objects.create(name="Best Product")
-    #
-    # def tearDown(self):
-    #     # будет выполнено после каждого теста
-    #     self.product.delete()
-
-    def test_get_product(self):
-        response = self.client.get(
-            reverse(
-                'shopapp:product_details',
-                kwargs={"pk": self.product.pk},
-            ),
+    def setUp(self):
+        self.client.force_login(self.user)
+        self.order_name = Order.objects.create(
+            delivery_address='Russia',
+            promocode="Skillbox",
+            user_id=self.user.pk,
         )
-        self.assertEqual(response.status_code, 200)
 
-    def test_get_product_and_check_links(self):
+    def tearDown(self):
+        self.order_name.delete()
+
+    def test_order_details(self):
         response = self.client.get(
-            reverse(
-                'shopapp:product_details',
-                kwargs={"pk": self.product.pk},
-            ),
+            reverse('shopapp:orders_details', kwargs={"pk": self.order_name.pk}),
         )
-        self.assertContains(response, self.product.name)
+        self.assertContains(response, 'Russia' and 'Skillbox', count=1)
+        self.assertTrue(response.context.get('order').pk == 1)
 
 
-class ProductsListTestCase(TestCase):
+class OrderExportViewTestCase(TestCase):
+
     fixtures = [
+        'users-fixture.json',
         'products-fixture.json',
+        'orders-fixture.json',
     ]
 
-    def test_products(self):
-        response = self.client.get(reverse('shopapp:products_list'))
-        self.assertQuerysetEqual(
-            qs=Product.objects.filter(archived=False).all(),
-            values=(p.pk for p in response.context['products']),
-            transform=lambda p: p.pk,
-        )
-        self.assertTemplateUsed(response, 'shopapp/products-list.html')
-
-
-class OrdersListViewTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.user = User.objects.create_user(username='test', password='test')
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='Skillbox', password='default')
 
     @classmethod
     def tearDownClass(cls):
@@ -104,37 +54,23 @@ class OrdersListViewTestCase(TestCase):
     def setUp(self):
         self.client.force_login(self.user)
 
-    def test_orders_view(self):
-        response = self.client.get(reverse('shopapp:orders_list'))
-        self.assertContains(response, 'Orders')
+    def test_order_export(self):
 
-    def test_orders_view_not_authenticated(self):
-        self.client.logout()
-        response = self.client.get(reverse('shopapp:orders_list'))
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(str(settings.LOGIN_URL), response.url)
+        response = self.client.get(reverse('shopapp:export_orders'))
+        self.assertTrue(response.status_code == 200)
 
+        orders = Order.objects.order_by('pk').all()
 
-class ProductsExportViewTestCase(TestCase):
-    fixtures = [
-        'products-fixture.json',
-    ]
-
-    def test_get_products_view(self):
-        response = self.client.get(reverse('shopapp:products-export'))
-        self.assertEqual(response.status_code, 200)
-        products = Product.objects.order_by('pk').all()
-        expected_data = [
+        expected_data = {"orders": [
             {
-                "pk": product.pk,
-                "name": product.name,
-                "price": str(product.price),
-                "archived": product.archived,
+                "pk": order.pk,
+                "delivery_address": order.delivery_address,
+                "promocode": order.promocode,
+                "user": order.user.pk,
+                "products": [product.pk for product in order.products.all()]
             }
-            for product in products
-        ]
-        products_data = response.json()
-        self.assertEqual(
-            products_data["products"],
-            expected_data,
-        )
+                for order in orders
+                    ]
+            }
+
+        self.assertEqual(response.json(), expected_data)

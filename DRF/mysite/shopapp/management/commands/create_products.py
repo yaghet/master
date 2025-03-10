@@ -9,15 +9,13 @@ class Command(BaseCommand):
     """
 
     def handle(self, *args, **options):
-        self.stdout.write("Create products")
-
+        self.stdout.write('Create products')
         products_names = [
-            "Laptop",
-            "Desktop",
-            "Smartphone",
+            'Laptop',
+            'Desktop',
+            'Smartphone',
         ]
-        for products_name in products_names:
-            product, created = Product.objects.get_or_create(name=products_name)
+        for product_name in products_names:
+            product, created = Product.objects.get_or_create(name=product_name)
             self.stdout.write(f"Created product {product.name}")
-
-        self.stdout.write(self.style.SUCCESS("Products created"))
+        self.stdout.write(self.style.SUCCESS('Products created'))
