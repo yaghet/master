@@ -1,33 +1,43 @@
 {% extends 'myauth/base.html' %}
 
 {% block title %}
-    About me
+    {{ user.first_name }} {{ user.last_name }}
 {% endblock %}
 
 {% block body %}
-    <h1>Мой профиль</h1>
-    {% if user.is_authenticated %}
-        <h2>Detail</h2>
+    <header>
+        <h1 class="profile-title">Мой профиль</h1>
+    </header>
 
-        {% if user.profile.avatar %}
-            <img width="250" height="250" src="{{ user.profile.avatar.url }}" alt=" {{ user.profile.avatar.name }}">
+    <section class="profile-details">
+        {% if user.is_authenticated %}
+            <h2>Детали профиля</h2>
+
+            <div class="avatar-container">
+                {% if user.profile.avatar %}
+                    <img class="avatar" width="250" height="250" src="{{ user.profile.avatar.url }}" alt="{{ user.profile.avatar.name }}">
+                {% else %}
+                    <p class="no-avatar">Аватар не загружен</p>
+                {% endif %}
+            </div>
+
+            <ul class="user-info">
+                <li><strong>Имя пользователя:</strong> {{ user.username }}</li>
+                <li><strong>Имя:</strong> {{ user.first_name }}</li>
+                <li><strong>Фамилия:</strong> {{ user.last_name }}</li>
+                <li><strong>Email:</strong> {{ user.email }}</li>
+                <li><strong>Биография:</strong> {{ user.profile.url }}</li>
+            </ul>
+
+            {% if request.user.is_staff or request.user.pk == user.pk %}
+                <a class="edit-profile" href="{% url 'myauth:avatar-update' pk=user.pk %}">Редактировать профиль</a>
+            {% endif %}
         {% else %}
-            Avatar not yet
+            <h2>Пользователь анонимный</h2>
         {% endif %}
+    </section>
 
-
-        <p>User name: {{ user.username }}</p>
-        <p>First name: {{ user.first_name }}</p>
-        <p>Last name: {{ user.last_name }}</p>
-        <p>Email: {{ user.email }}</p>
-        <p>Bio: {{ user.profile.url }}</p>
-        {% if request.user.is_staff or request.user.pk == user.pk %}
-            <a href="{% url 'myauth:avatar-update' pk=user.pk %}">
-                <h3>Редактировать профиль</h3>
-            </a>
-        {% endif %}
-    {% else %}
-        <h2>User is anonymous</h2>
-    {% endif %}
-    <a href="{% url 'myauth:list-users' %}">Список пользователей</a>
+    <footer>
+        <a href="{% url 'myauth:list-users' %}">Список пользователей</a>
+    </footer>
 {% endblock %}

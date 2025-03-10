@@ -7,8 +7,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.urls import reverse_lazy
 from .models import Profile, User
-from .forms import ProfileUpdate
-
+from django.utils.translation import gettext
 
 
 #View для обновления аватара пользователя
@@ -73,6 +72,7 @@ class ListUsersView(ListView):
     context_object_name = 'users'
     queryset = User.objects.all()
 
+
 # View для просмотра информации о пользователе
 class UserDetailView(DetailView):
     template_name = 'myauth/user_detail.html'
@@ -85,6 +85,7 @@ class MyLogoutPage(View):
     def get(self, request):
         logout(request)
         return redirect('myauth:login')
+
 
 # View для установки данных в cookies пользователя
 def set_cookie_view(request: HttpRequest) -> HttpResponse:
@@ -109,8 +110,3 @@ def set_session_view(request) -> HttpResponse:
 def get_session_view(request) -> HttpResponse:
      value = request.session.get('foobar', 'default')
      return HttpResponse(f'Session value {value!r}')
-
-
-class FooBarView(View):
-    def get(self, request: HttpRequest) -> JsonResponse:
-        return JsonResponse({"one": "True", "zero": "False"})

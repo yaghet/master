@@ -29,6 +29,7 @@ class ShopAppView(View):
         ]
         context_shop = {
             "products": products,
+            "items": 1,
         }
         return render(request, "shopapp/shop-app.html", context=context_shop)
 
@@ -115,6 +116,7 @@ class ProductUpdateView(UserPassesTestMixin, UpdateView, FormView):
                  image=image,
              )
         return response
+
 
 # View для выполнения архивации выбранной сущности
 class ProductDeleteView(DeleteView):

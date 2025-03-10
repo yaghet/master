@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.translation import gettext as _
 
 
 def product_preview_directory_path(instance: 'Product', filename: str) -> str:
@@ -36,6 +37,8 @@ class Product(models.Model):
 
     class Meta:
         ordering = ['name', 'price']
+        verbose_name = _('Product')
+        verbose_name_plural = _('Products')
 
     name = models.CharField(max_length=100)
     description = models.TextField(null=False, blank=True)
@@ -56,7 +59,11 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to=product_images_directory_path)
     description = models.TextField(max_length=200, null=False, blank=True)
 
+
 class Order(models.Model):
+    class Meta:
+        verbose_name = _('Order')
+        verbose_name_plural = _('Orders')
 
     objects = None
 
