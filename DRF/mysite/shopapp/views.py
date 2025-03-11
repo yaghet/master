@@ -9,6 +9,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import (CreateView, DeleteView, DetailView, FormView,
                                   ListView, UpdateView)
+from django_filters.rest_framework.backends import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.viewsets import ModelViewSet
 
@@ -38,7 +39,7 @@ class OrderViewSet(ModelViewSet):
     serializer_class = OrderSerializer
 
     filter_backends = [
-        SearchFilter,
+        DjangoFilterBackend,
         OrderingFilter,
     ]
     search_fields = ['delivery_address']
