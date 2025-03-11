@@ -1,21 +1,27 @@
 from timeit import default_timer
 
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, reverse
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
-from django_filters.rest_framework import DjangoFilterBackend
 
 from .forms import ProductForm
 from .models import Product, Order, ProductImage
 from .serializers import ProductSerializer
 
 
+@extend_schema(description='CRUD for Product')
 class ProductViewSet(ModelViewSet):
+    """
+    The set of presented for work on Product.
+    Full set for object - Product.
+    """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = [
@@ -36,6 +42,28 @@ class ProductViewSet(ModelViewSet):
         "price",
         "discount",
     ]
+
+    @extend_schema(
+        summary='Get Product by id',
+        description='Return the product by id or not found 404',
+        responses={
+            200: ProductSerializer,
+            404: None,
+        }
+    )
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @extend_schema(
+        summary='Update Product by id',
+        description='Update the product by id or not found 404',
+        responses={
+            200: ProductSerializer,
+            404: None,
+        }
+    )
+    def update(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
 
 class ShopIndexView(View):
