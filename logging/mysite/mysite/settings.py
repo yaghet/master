@@ -27,7 +27,21 @@ SECRET_KEY = 'django-insecure-hvxn%qq=gyw^4*o2lo1#bw0=wh#ux9s8h!=@c608arf_gz3+^7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    '0.0.0.0',
+]
+INTERNAL_IPS = ['127.0.0.1']
+
+if DEBUG:
+    import socket
+    host_name, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    print(host_name, _, ips)
+    INTERNAL_IPS.append('10.0.2.2')
+    INTERNAL_IPS.extend(
+        [ip[: ip.rfind('.')] + '.1' for ip in ips]
+    )
 
 
 # Application definition
@@ -40,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'debug_toolbar',
     'rest_framework',
     'django_filters',
 
@@ -55,6 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -144,3 +160,29 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = reverse_lazy("myauth:about-me")
 LOGIN_URL = reverse_lazy("myauth:login")
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[%(asctime)s] %(levelname)s %(module)s "%(message)s"',
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'verbose',
+            'filename': BASE_DIR / 'mysite.log',
+            'maxBytes': 1024 * 1024 * 5, 'backupCount': 5,
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}

@@ -1,5 +1,5 @@
 from timeit import default_timer
-
+import logging
 from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, reverse
 from django.urls import reverse_lazy
@@ -13,6 +13,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .forms import ProductForm
 from .models import Product, Order, ProductImage
 from .serializers import ProductSerializer
+
+
+logger = logging.getLogger(__name__)
 
 
 class ProductViewSet(ModelViewSet):
@@ -61,6 +64,9 @@ class ProductDetailsView(DetailView):
 class ProductsListView(ListView):
     template_name = "shopapp/products-list.html"
     context_object_name = "products"
+    def dispatch(self, request, *args, **kwargs):
+        logger.info('Test')
+        return super().dispatch(request, *args, **kwargs)
     queryset = Product.objects.filter(archived=False)
 
 
