@@ -110,17 +110,26 @@ class OrderAdmin(admin.ModelAdmin):
         )
         reader = DictReader(csv_file)
 
-        orders = []
-
+        orders_to_create = []
         for row in reader:
             user_id = row.pop('user')
             user_instance = User.objects.get(id=user_id)
             row['user'] = user_instance
+
+            product_id = row.pop('products')
+            product = Product.objects.get(id=product_id)
+
             order = Order(**row)
-            orders.append(order)
+            orders_to_create.append((order, product))
 
 
-        Order.objects.bulk_create(orders)
+        if orders_to_create:
+            orders = [order for order, _ in orders_to_create]
+            Order.objects.bulk_create(orders)
+
+            for order, product in orders_to_create:
+                order.products.add(product)
+
         self.message_user(request, "Successfully imported orders.")
 
         return redirect("..")
