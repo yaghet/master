@@ -1,18 +1,41 @@
 from timeit import default_timer
 
-from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
+from django.contrib.auth.mixins import (LoginRequiredMixin,
+                                        PermissionRequiredMixin)
+from django.contrib.syndication.views import Feed
+from django.http import (HttpRequest, HttpResponse, HttpResponseRedirect,
+                         JsonResponse)
 from django.shortcuts import render, reverse
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.viewsets import ModelViewSet
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.viewsets import ModelViewSet
 
 from .forms import ProductForm
-from .models import Product, Order, ProductImage
+from .models import Order, Product, ProductImage
 from .serializers import ProductSerializer
+
+
+class LatestProductsFeedView(Feed):
+    title = 'Latest Products'
+    description = 'Latest Products'
+    link = reverse_lazy('shopapp:product-list')
+
+    def items(self):
+        return (
+            Product.objects.
+            filter(archived__isnull=False)
+            .order_by('-created_at')[:5]
+        )
+
+    def item_title(self, item: Product):
+        return item.name
+
+    def item_description(self, item: Product):
+        return item.description[:200]
 
 
 class ProductViewSet(ModelViewSet):
