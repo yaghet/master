@@ -1,3 +1,4 @@
+from django.urls import reverse
 from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import User
@@ -29,6 +30,10 @@ class Product(models.Model):
 
     if TYPE_CHECKING:
         objects: Manager
+
+    def get_absolute_url(self):
+        return reverse("shopapp:product-detail", kwargs={"pk": self.pk})
+
 
 def product_images_directory_path(instance: "ProductImage", filename: str) -> str:
     return "products/product_{pk}/images/{filename}".format(
