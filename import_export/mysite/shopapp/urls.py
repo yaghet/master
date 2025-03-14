@@ -1,18 +1,11 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (
-    ShopIndexView,
-    ProductDetailsView,
-    ProductsListView,
-    OrdersListView,
-    OrderDetailView,
-    ProductCreateView,
-    ProductUpdateView,
-    ProductDeleteView,
-    ProductsDataExportView,
-    ProductViewSet,
-)
+from .views import (OrderDetailView, OrdersListView, ProductCreateView,
+                    ProductDeleteView, ProductDetailsView,
+                    ProductsDataExportView, ProductsListView,
+                    ProductUpdateView, ProductViewSet, ShopIndexView,
+                    LatestProductsFeedView,)
 
 app_name = "shopapp"
 
@@ -20,6 +13,7 @@ routers = DefaultRouter()
 routers.register("products", ProductViewSet)
 
 urlpatterns = [
+    path('products/latest/feed/', LatestProductsFeedView(), name='latest-products-feed'),
     path("", ShopIndexView.as_view(), name="index"),
     path("api/", include(routers.urls)),
     path("products/", ProductsListView.as_view(), name="products_list"),
