@@ -1,0 +1,44 @@
+{% extends 'shopapp/base.html' %}
+{% load cache %}
+
+{% block title %}
+    User orders
+{% endblock %}
+
+{% block body %}
+    {% if object_list %}
+        {% cache 100 orders owner.pk %}
+            <h2>Пользователь {{ owner.username|capfirst }} выполнил следующие заказы:</h2>
+            <table>
+                <thead>
+                <tr>
+                    <th>Номер заказа</th>
+                    <th>Дата создания</th>
+                    <th>Продукты в заказе</th>
+                    <th>Действия</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in object_list %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.created_at }}</td>
+                        <td>
+                            <ul>
+                                {% for product in order.products.all %}
+                                    <li>{{ product.name }} за ${{ product.price }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <a href="{% url 'shopapp:order_details' pk=order.id %}">Подробнее</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endcache %}
+    {% else %}
+        <p>У пользователя {{ owner.username }} ({{ owner.first_name }}) ещё нет заказов.</p>
+    {% endif %}
+{% endblock %}

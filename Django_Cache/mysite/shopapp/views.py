@@ -4,7 +4,11 @@ from timeit import default_timer
 from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, reverse
 from django.urls import reverse_lazy
+from django.http import Http404
 from django.views import View
+from django.core.cache import cache
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from rest_framework.parsers import MultiPartParser
@@ -17,8 +21,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from .common import save_csv_products
 from .forms import ProductForm
-from .models import Product, Order, ProductImage
-from .serializers import ProductSerializer
+from .models import Product, Order, ProductImage, User
+from .serializers import ProductSerializer, OrderSerializer
 
 
 class ProductViewSet(ModelViewSet):
@@ -147,13 +151,20 @@ class ProductDeleteView(DeleteView):
         return HttpResponseRedirect(success_url)
 
 
-class OrdersListView(LoginRequiredMixin, ListView):
-    queryset = (
-        Order.objects
-        .select_related("user")
-        .prefetch_related("products")
-        .all()
-    )
+class UserOrdersListView(LoginRequiredMixin, ListView):
+    model = Order
+    template_name = 'shopapp/user-orders-list.html'
+
+    def get_queryset(self):
+        user_id = self.kwargs['pk']
+        self.owner = User.objects.get(id=user_id)
+
+        return Order.objects.filter(user=self.owner)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['owner'] = self.owner
+        return context
 
 
 class OrderDetailView(PermissionRequiredMixin, DetailView):
@@ -178,3 +189,33 @@ class ProductsDataExportView(View):
             for product in products
         ]
         return JsonResponse({"products": products_data})
+
+
+class OrderDataExportView(View):
+    @method_decorator(cache_page(60 * 5), name='get')  # Кеширование на 5 минут
+    def get(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except Exception as e:
+            raise Http404('Пользователь не найден')
+
+        orders = Order.objects.filter(user=user).order_by('id')
+        serializer = OrderSerializer(orders, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    # def get(self, request, user_id):
+    #     cache_key = f"user_orders_{user_id}"
+    #     data = cache.get(cache_key)
+    #
+    #     if data is None:
+    #         try:
+    #             user = User.objects.get(pk=user_id)
+    #         except User.DoesNotExist:
+    #             raise Http404('Пользователя с таким id нет')
+    #
+    #         orders = Order.objects.filter(user=user).order_by('id')
+    #         serializer = OrderSerializer(orders, many=True)
+    #         data = serializer.data
+    #         cache.set(cache_key, data, 60 * 5)
+    #
+    #     return JsonResponse(data, safe=False)
