@@ -1,28 +1,30 @@
 from csv import DictWriter
 from timeit import default_timer
 
-from django.http import HttpResponse, HttpRequest, HttpResponseRedirect, JsonResponse
+from django.contrib.auth.mixins import (LoginRequiredMixin,
+                                        PermissionRequiredMixin)
+from django.core.cache import cache
+from django.http import (Http404, HttpRequest, HttpResponse,
+                         HttpResponseRedirect, JsonResponse)
 from django.shortcuts import render, reverse
 from django.urls import reverse_lazy
-from django.http import Http404
-from django.views import View
-from django.core.cache import cache
 from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.cache import cache_page
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
+                                  UpdateView)
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.parsers import MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
 
 from .common import save_csv_products
 from .forms import ProductForm
-from .models import Product, Order, ProductImage, User
-from .serializers import ProductSerializer, OrderSerializer
+from .models import Order, Product, ProductImage, User
+from .serializers import OrderSerializer, ProductSerializer
 
 
 class ProductViewSet(ModelViewSet):

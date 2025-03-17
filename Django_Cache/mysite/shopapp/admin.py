@@ -1,13 +1,13 @@
 from django.contrib import admin
 from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.urls import path
 
-from .common import save_csv_products
-from .models import Product, Order, ProductImage
 from .admin_mixins import ExportAsCSVMixin
+from .common import save_csv_products
 from .forms import CSVImportForm
+from .models import Order, Product, ProductImage
 
 
 class OrderInline(admin.TabularInline):

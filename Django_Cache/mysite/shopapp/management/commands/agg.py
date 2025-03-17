@@ -1,8 +1,8 @@
 
 from django.core.management import BaseCommand
-from django.db.models import Avg, Max, Min, Count, Sum
+from django.db.models import Avg, Count, Max, Min, Sum
 
-from shopapp.models import Product, Order
+from shopapp.models import Order, Product
 
 
 class Command(BaseCommand):
@@ -32,6 +32,7 @@ class Command(BaseCommand):
 
 
 import json
+
 data = {'spam': 'eggs', 'age': None}
 
 data_as_str = json.dumps(data)

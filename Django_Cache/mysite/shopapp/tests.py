@@ -1,5 +1,5 @@
-from string import ascii_letters
 from random import choices
+from string import ascii_letters
 
 from django.conf import settings
 from django.contrib.auth.models import User

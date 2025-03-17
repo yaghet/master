@@ -1,19 +1,11 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (
-    ShopIndexView,
-    ProductDetailsView,
-    ProductsListView,
-    UserOrdersListView,
-    OrderDetailView,
-    ProductCreateView,
-    ProductUpdateView,
-    ProductDeleteView,
-    ProductsDataExportView,
-    ProductViewSet,
-    OrderDataExportView,
-)
+from .views import (OrderDataExportView, OrderDetailView, ProductCreateView,
+                    ProductDeleteView, ProductDetailsView,
+                    ProductsDataExportView, ProductsListView,
+                    ProductUpdateView, ProductViewSet, ShopIndexView,
+                    UserOrdersListView)
 
 app_name = "shopapp"
 
