@@ -194,30 +194,28 @@ class ProductsDataExportView(View):
 
 
 class OrderDataExportView(View):
-    @method_decorator(cache_page(60 * 5), name='get')  # Кеширование на 5 минут
+
     def get(self, request, user_id):
-        try:
-            user = User.objects.get(id=user_id)
-        except Exception as e:
-            raise Http404('Пользователь не найден')
+        cache_key = f"user_orders_{user_id}"
 
-        orders = Order.objects.filter(user=user).order_by('id')
-        serializer = OrderSerializer(orders, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        cache_data_order = cache.get(cache_key)
 
-    # def get(self, request, user_id):
-    #     cache_key = f"user_orders_{user_id}"
-    #     data = cache.get(cache_key)
-    #
-    #     if data is None:
-    #         try:
-    #             user = User.objects.get(pk=user_id)
-    #         except User.DoesNotExist:
-    #             raise Http404('Пользователя с таким id нет')
-    #
-    #         orders = Order.objects.filter(user=user).order_by('id')
-    #         serializer = OrderSerializer(orders, many=True)
-    #         data = serializer.data
-    #         cache.set(cache_key, data, 60 * 5)
-    #
-    #     return JsonResponse(data, safe=False)
+        if cache_data_order is None:
+            try:
+                owner = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                raise Http404('Пользователя с таким id нет')
+
+            orders = (
+                Order.objects
+                .select_related("user")
+                .prefetch_related("products")
+                .order_by('id')
+                .filter(user=owner)
+                .all()
+            )
+
+            cache_data_order = OrderSerializer(orders, many=True).data
+            cache.set(cache_key, cache_data_order, timeout=60 * 2)
+
+        return JsonResponse({'Order data': cache_data_order})
